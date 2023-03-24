@@ -160,7 +160,7 @@ public class LongMapping extends DataTypeMapping {
             }
             // Если же значение равно 0, то в зависимости от знака заполняем оставшуюся память
             // либо FF для отрицательных, либо 0 для положительных
-            else if (real_memory[j][i] < 0)
+            else if (real_memory[i][j] < 0)
                 memory_dump[i][k] = 127;
             else
                 memory_dump[i][k] = -128;
