@@ -179,11 +179,13 @@ public class IntMapping extends DataTypeMapping{
     public StringBuilder getAsMemoryDump() {
         StringBuilder dump = new StringBuilder();
 
-        int delta = memory_dump[0].length / real_memory[0].length;
+        int delta = 16 / width;
         boolean bn = big_endian.isChecked();
 
+        // Перебираем все строки в памяти
         for (byte[] line: memory_dump) {
-            for (int i = 0; i < real_memory[0].length; ++i) {
+            //
+            for (int i = 0; i < width; ++i) {
                 for (int j = i * delta; j < (i + 1) * delta; ++j) {
                     int value = line[bn ? delta * (2 * i + 1) - j - 1: j] + 128;
                     String str = Integer.toHexString(value).toUpperCase();
@@ -208,15 +210,15 @@ public class IntMapping extends DataTypeMapping{
         if (old_memory == null)
             return;
 
+        int full_len = 16 / width;
+
         if (old_memory[0].length > real_memory_flags[0].length) {
-            // Длина требуемой строки
-            int full_len = 16 / real_memory[0].length;
             // Итерируемся по каждой строке памяти
             for (int line = 0; line < real_memory.length; ++line) {
 
                 // теперь перебираем каждый столбец в памяти (зависит их число от типа данных,
                 // это 16 делить на число байтов, отводимых под тип данных)
-                for (int i = 0; i < real_memory[0].length; ++i) {
+                for (int i = 0; i < width; ++i) {
                     // Коэфициент, одна из степеней 256 (при считывании каждого байта умножаем на 2)
                     int coef = 1;
                     // Считанные их памяити данные
@@ -236,11 +238,19 @@ public class IntMapping extends DataTypeMapping{
                             // Считываем данные в число
                             data += (memory_dump[line][sub_i] + 128) * coef;
                             // Увеличиваем коэфициент (двигаем в следующий разряд)
-                            coef *= 256;
+                            coef <<= 8;
                         }
                         // Через или получаем инфу о том, есть ли что в ячейках (через проверку data
                         // не вариант, там мог быть в памяти 0 записан)
                         flag = flag || old_memory[line][bool_idx];
+
+                        // Если выбран порядок байтов биг-ендиан и текущий индекс не последний
+                        // И при этом данные в следующей ячейке памяти есть, то, чтобы их порядок соответствовал
+                        // big-endian, меняем их в памяти местами.
+                        if (big_endian.isChecked() && bool_idx < (i + 1) * sub_len - 1 && old_memory[line][bool_idx + 1]) {
+                            data <<= 8L * old_memory[0].length;
+                            coef = 1;
+                        }
                     }
 
                     // Записываем считанные данные
@@ -250,8 +260,6 @@ public class IntMapping extends DataTypeMapping{
             }
         }
         else {
-            // Длина требуемой строки
-            int full_len = 16 / real_memory[0].length;
             // Итерируемся по каждой строке памяти
             for (int line = 0; line < real_memory.length; ++line) {
 

@@ -30,7 +30,42 @@ public abstract class DataTypeMapping {
     public static final StandardInputField mappingInputFilter = new StandardInputField(allowed);
 
     public StringBuilder getAsMemoryDump() {
-        return null;
+        StringBuilder dump = new StringBuilder();
+
+        int delta = 16 / width;
+        boolean bn = big_endian.isChecked();
+
+        // Перебираем все строки в памяти
+        for (byte[] line: memory_dump) {
+            // перебираем каждую ячейку памяти
+            for (int i = 0; i < width; ++i) {
+                // Теперь перебираем ячейку побайтово
+                for (int j = i * delta; j < (i + 1) * delta; ++j) {
+                    // Если используется big-endian, берем байты с конца, иначе с начала
+                    // и добавляем 128, так как положительные от -128 до -1 по значениям,
+                    // а отрицательные от 0 до 127. При добавлении 128 имеем диапазон от 0 до 255
+                    // и за счет этого мы сразу переводим число в доп. код
+                    int value = line[bn ? delta * (2 * i + 1) - j - 1: j] + 128;
+                    // В 16-ричное число
+                    String str = Integer.toHexString(value).toUpperCase();
+                    // Если один символ, до добавляем 0, чтобыв не сместилась строка
+                    if (str.length() == 1)
+                        str = '0' + str;
+                    dump.append(str);
+
+                    // Если мы не в конце и не надо добавлять разделитель
+                    if (j < (i + 1) * delta - 1)
+                        dump.append(' ');
+                }
+                // Если мы на стыке между значениями, ставим разделитель
+                if ((i + 1) * delta < line.length)
+                    dump.append('|');
+            }
+            // Новая строка
+            dump.append('\n');
+        }
+
+        return dump;
     }
 
     public InputFilter[] getInputFilter() {

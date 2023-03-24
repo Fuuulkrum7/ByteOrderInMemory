@@ -177,34 +177,6 @@ public class LongMapping extends DataTypeMapping {
     }
 
     @Override
-    public StringBuilder getAsMemoryDump() {
-        StringBuilder dump = new StringBuilder();
-
-        int delta = 16 / width;
-        boolean bn = big_endian.isChecked();
-
-        for (byte[] line: memory_dump) {
-            for (int i = 0; i < width; ++i) {
-                for (int j = i * delta; j < (i + 1) * delta; ++j) {
-                    int value = line[bn ? delta * (2 * i + 1) - j - 1: j] + 128;
-                    String str = Long.toHexString(value).toUpperCase();
-                    if (str.length() == 1)
-                        str = '0' + str;
-                    dump.append(str);
-
-                    if (j < (i + 1) * delta - 1)
-                        dump.append(' ');
-                }
-                if ((i + i) * delta < line.length)
-                    dump.append('|');
-            }
-            dump.append('\n');
-        }
-
-        return dump;
-    }
-
-    @Override
     public void setBoolean(boolean[][] old_memory) {
         if (old_memory == null)
             return;
@@ -242,6 +214,10 @@ public class LongMapping extends DataTypeMapping {
                     // Через или получаем инфу о том, есть ли что в ячейках (через проверку data
                     // не вариант, там мог быть в памяти 0 записан)
                     flag = flag || old_memory[line][bool_idx];
+
+                    // Если выбран порядок байтов биг-ендиан и текущий индекс не последний
+                    // И при этом данные в следующей ячейке памяти есть, то, чтобы их порядок соответствовал
+                    // big-endian, меняем их в памяти местами.
                     if (big_endian.isChecked() && bool_idx < (i + 1) * sub_len - 1 && old_memory[line][bool_idx + 1]) {
                         data <<= 8L * old_memory[0].length;
                         coef = 1;
