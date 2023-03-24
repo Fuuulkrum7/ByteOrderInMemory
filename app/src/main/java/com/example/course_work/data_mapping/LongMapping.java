@@ -4,8 +4,6 @@ import static java.lang.Math.abs;
 
 import android.annotation.SuppressLint;
 import android.text.Editable;
-import android.text.InputFilter;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -17,7 +15,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.course_work.MainActivity;
-import com.example.course_work.StandardInputField;
 
 public class LongMapping extends DataTypeMapping {
     long[][] real_memory;
@@ -26,7 +23,8 @@ public class LongMapping extends DataTypeMapping {
         @SuppressLint("SetTextI18n")
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            x = Integer.parseInt(parent.getItemAtPosition(position).toString()) / (16 / width);
+            char val = parent.getItemAtPosition(position).toString().charAt(1);
+            x = Integer.parseInt(String.valueOf(val), 16) / (16 / width);
 
             if (real_memory_flags[y][x]) {
                 input_field.setText(Long.toString(real_memory[y][x]));
@@ -118,7 +116,7 @@ public class LongMapping extends DataTypeMapping {
                         input_field.setText(prev);
                         Toast.makeText(MainActivity.getContext(), "Number is to big for long!", Toast.LENGTH_SHORT).show();
                     }
-                    updateByteArray();
+                    updateByteArray(y, x);
                 }
                 else if (s.length() == 0 && !just_cleared) {
                     real_memory_flags[y][x] = false;
@@ -139,20 +137,43 @@ public class LongMapping extends DataTypeMapping {
         };
     }
 
-    private void updateByteArray() {
-        long val = real_memory[y][x];
+    private void updateByteArray(int i, int j) {
+        // Считываем число с выбранной пользователем позиции
+        long val = real_memory[i][j];
+        // Получаем число байтов, которые будут задействованы при записи
         int size = 16 / width;
 
-        for (int k = x * size; k < (x + 1) * size && real_memory_flags[y][x]; ++k) {
-            if (abs(val) > 0) {
-                memory_dump[y][k] = (byte) (val % 256 - 128);
+        // Перебираем массив байтов
+        // x - изначально выражается как номер первого байта в выбранной ячейке
+        // делить на size. Умножая его на size,
+        // мы снова получаем номер первого байта в ячейке.
+        // Так же мы не начинаем цикл, если флаг, отвечающий за то, было ли что-то записано
+        // в ячейку памяти, имеет значение ложь. Перебираем только одну ячейку памяти длиной size
+        for (int k = j * size; k < (j + 1) * size && real_memory_flags[i][j]; ++k) {
+            // Если число не равно 0, то записываем текущее значение байта
+            // минус 128. За счет этого для положительного числа его значение будет от -128 до -1,
+            // для отрицтельного - от 0 до 127
+            // И двигаем обрабатываемое число на 1 байт
+            if (val != 0) {
+                memory_dump[i][k] = (byte) (val % 256 - 128);
                 val >>= 8;
             }
-            else if (real_memory[y][x] < 0)
-                memory_dump[y][k] = 127;
+            // Если же значение равно 0, то в зависимости от знака заполняем оставшуюся память
+            // либо FF для отрицательных, либо 0 для положительных
+            else if (real_memory[j][i] < 0)
+                memory_dump[i][k] = 127;
             else
-                memory_dump[y][k] = -128;
+                memory_dump[i][k] = -128;
         }
+    }
+
+    private void fullUpdate() {
+        for (int i = 0; i < height; ++i) {
+            for (int j = 0; j < width; ++j) {
+                updateByteArray(i, j);
+            }
+        }
+        memory_text.setText(getAsMemoryDump());
     }
 
     @Override
@@ -221,6 +242,10 @@ public class LongMapping extends DataTypeMapping {
                     // Через или получаем инфу о том, есть ли что в ячейках (через проверку data
                     // не вариант, там мог быть в памяти 0 записан)
                     flag = flag || old_memory[line][bool_idx];
+                    if (big_endian.isChecked() && bool_idx < (i + 1) * sub_len - 1 && old_memory[line][bool_idx + 1]) {
+                        data <<= 8L * old_memory[0].length;
+                        coef = 1;
+                    }
                 }
 
                 // Записываем считанные данные
@@ -229,8 +254,7 @@ public class LongMapping extends DataTypeMapping {
             }
         }
 
-        updateByteArray();
-        memory_text.setText(getAsMemoryDump());
+        fullUpdate();
     }
 
     @Override

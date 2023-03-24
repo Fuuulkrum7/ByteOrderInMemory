@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         String[] values = new String[16 / dataTypeMapping.getWidth()];
 
         for (int i = 0, value = 0; i < values.length; value += dataTypeMapping.getWidth(), ++i)
-            values[i] = Integer.toString(value);
+            values[i] = "*" + Integer.toHexString(value).toUpperCase();
 
         ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>
                 (this, android.R.layout.simple_spinner_item,

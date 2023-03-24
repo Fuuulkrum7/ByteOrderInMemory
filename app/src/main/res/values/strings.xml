@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">course_work</string>
-    <string name="counter">00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15</string>
+    <string name="counter">*0 *1 *2 *3 *4 *5 *6 *7 *8 *9 *A *B *C *D *E *F</string>
     <string name="adress_name">Адрес</string>
     <string name="start_btn_text">Go</string>
     <string name="kirillica">Кириллица:</string>
