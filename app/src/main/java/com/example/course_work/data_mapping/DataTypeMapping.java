@@ -12,7 +12,7 @@ import android.widget.TextView;
 import com.example.course_work.StandardInputField;
 
 public abstract class DataTypeMapping {
-    int height = 11;
+    public final static int height = 10;
     int width = 4;
     byte[][] memory_dump;
     TextView memory_text;

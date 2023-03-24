@@ -36,7 +36,8 @@ public class MainActivity extends AppCompatActivity {
     Spinner datatype, address_y, address_x;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     Switch cyrillic, big_endian;
-    byte[][] memory = new byte[11][16];
+    int height = DataTypeMapping.height;
+    byte[][] memory = new byte[height][16];
     int address_number = Integer.parseInt("100000", 16);
     DataTypeMapping dataTypeMapping = null;
 
@@ -61,12 +62,12 @@ public class MainActivity extends AppCompatActivity {
         memory_dump = findViewById(R.id.memory_dump);
 
         StringBuilder dump = new StringBuilder();
-        String[] addresses = new String[11];
+        String[] addresses = new String[height];
 
         address_number += (new Random()).nextInt(Integer.parseInt("800000", 16));
         address_number -= address_number % 16;
 
-        for (int j = 0; j < 11; ++j) {
+        for (int j = 0; j < height; ++j) {
             byte[] line = memory[j];
             Arrays.fill(line, (byte) 127);
             for (int i = 0; i < line.length; ++i) {
