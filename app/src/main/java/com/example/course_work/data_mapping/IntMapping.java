@@ -219,7 +219,7 @@ public class IntMapping extends DataTypeMapping{
                 // теперь перебираем каждый столбец в памяти (зависит их число от типа данных,
                 // это 16 делить на число байтов, отводимых под тип данных)
                 for (int i = 0; i < width; ++i) {
-                    // Коэфициент, одна из степеней 256 (при считывании каждого байта умножаем на 2)
+                    // Коэффициент, одна из степеней 256 (при считывании каждого байта умножаем на 2)
                     int coef = 1;
                     // Считанные их памяити данные
                     int data = 0;
@@ -237,7 +237,7 @@ public class IntMapping extends DataTypeMapping{
                         for (int sub_i = bool_idx * (full_len / sub_len); sub_i < (bool_idx + 1) * (full_len / sub_len); ++sub_i) {
                             // Считываем данные в число
                             data += (memory_dump[line][sub_i] + 128) * coef;
-                            // Увеличиваем коэфициент (двигаем в следующий разряд)
+                            // Увеличиваем коэффициент (двигаем в следующий разряд)
                             coef <<= 8;
                         }
                         // Через или получаем инфу о том, есть ли что в ячейках (через проверку data
@@ -270,7 +270,7 @@ public class IntMapping extends DataTypeMapping{
 
                     // Перебираем все старые ячейки
                     for (int bool_idx = i * sub_len; bool_idx < (i + 1) * sub_len && old_memory[line][i]; ++bool_idx) {
-                        // Коэфициент, одна из степеней 256 (при считывании каждого байта умножаем на 2)
+                        // Коэффициент, одна из степеней 256 (при считывании каждого байта умножаем на 2)
                         int coef = 1;
                         // Считанные их памяити данные
                         int data = 0;
@@ -279,7 +279,7 @@ public class IntMapping extends DataTypeMapping{
                         for (int sub_i = bool_idx * full_len; sub_i < (bool_idx + 1) * full_len; ++sub_i) {
                             // Считываем данные в число
                             data += (memory_dump[line][sub_i] + 128) * coef;
-                            // Увеличиваем коэфициент (двигаем в следующий разряд)
+                            // Увеличиваем коэффициент (двигаем в следующий разряд)
                             coef <<= 8;
                         }
 

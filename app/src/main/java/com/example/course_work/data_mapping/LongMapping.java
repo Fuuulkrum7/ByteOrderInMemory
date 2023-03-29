@@ -189,7 +189,7 @@ public class LongMapping extends DataTypeMapping {
             // теперь перебираем каждый столбец в памяти (зависит их число от типа данных,
             // это 16 делить на число байтов, отводимых под тип данных)
             for (int i = 0; i < width; ++i) {
-                // Коэфициент, одна из степеней 256 (при считывании каждого байта умножаем на 2)
+                // Коэффициент, одна из степеней 256 (при считывании каждого байта умножаем на 2)
                 long coef = 1;
                 // Считанные их памяити данные
                 long data = 0;
@@ -207,7 +207,7 @@ public class LongMapping extends DataTypeMapping {
                     for (int sub_i = bool_idx * (full_len / sub_len); sub_i < (bool_idx + 1) * (full_len / sub_len) && old_memory[line][bool_idx]; ++sub_i) {
                         // Считываем данные в число
                         data += (memory_dump[line][sub_i] + 128) * coef;
-                        // Увеличиваем коэфициент (двигаем в следующий разряд)
+                        // Увеличиваем коэффициент (двигаем в следующий разряд)
                         coef <<= 8;
                         Log.d(MainActivity.TAG, data + "|" + coef);
                     }
