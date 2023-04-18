@@ -29,10 +29,9 @@ public class FloatMapping extends DataTypeMapping {
             x = Integer.parseInt(String.valueOf(val), 16) / (16 / width);
 
             if (real_memory_flags[y][x]) {
-                // DecimalFormat df = new DecimalFormat("#");
                 String res = new BigDecimal(real_memory[y][x]).toPlainString();
                 int idx = res.indexOf('.');
-                input_field.setText(res.substring(0, 37 + idx));
+                input_field.setText(res.substring(0, 48 + idx));
             }
             else {
                 just_cleared = true;
@@ -53,9 +52,9 @@ public class FloatMapping extends DataTypeMapping {
             y = position;
 
             if (real_memory_flags[y][x]) {
-                // DecimalFormat df = new DecimalFormat("#");
                 String res = new BigDecimal(real_memory[y][x]).toPlainString();
-                input_field.setText(res);
+                int idx = res.indexOf('.');
+                input_field.setText(res.substring(0, 48 + idx));
             }
             else {
                 just_cleared = true;
