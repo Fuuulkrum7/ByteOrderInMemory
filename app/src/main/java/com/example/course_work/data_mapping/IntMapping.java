@@ -60,6 +60,7 @@ public class IntMapping extends DataTypeMapping{
 
         }
     };
+
     public IntMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
                        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch big_endian,
                       int x, int y, int width) {
@@ -75,9 +76,9 @@ public class IntMapping extends DataTypeMapping{
         this.x = x;
         this.y = y;
     }
+
     public IntMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
                       @SuppressLint("UseSwitchCompatOrMaterialCode") Switch big_endian) {
-
         super();
 
         width = 4;
@@ -173,36 +174,6 @@ public class IntMapping extends DataTypeMapping{
             }
         }
         memory_text.setText(getAsMemoryDump());
-    }
-
-    @Override
-    public StringBuilder getAsMemoryDump() {
-        StringBuilder dump = new StringBuilder();
-
-        int delta = 16 / width;
-        boolean bn = big_endian.isChecked();
-
-        // Перебираем все строки в памяти
-        for (byte[] line: memory_dump) {
-            //
-            for (int i = 0; i < width; ++i) {
-                for (int j = i * delta; j < (i + 1) * delta; ++j) {
-                    int value = line[bn ? delta * (2 * i + 1) - j - 1: j] + 128;
-                    String str = Integer.toHexString(value).toUpperCase();
-                    if (str.length() == 1)
-                        str = '0' + str;
-                    dump.append(str);
-
-                    if (j < (i + 1) * delta - 1)
-                        dump.append(' ');
-                }
-                if ((i + i) * delta <= line.length)
-                    dump.append('|');
-            }
-            dump.append('\n');
-        }
-
-        return dump;
     }
 
     @Override

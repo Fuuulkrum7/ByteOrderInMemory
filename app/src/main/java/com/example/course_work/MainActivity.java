@@ -17,6 +17,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.example.course_work.data_mapping.DataTypeMapping;
+import com.example.course_work.data_mapping.FloatMapping;
 import com.example.course_work.data_mapping.IntMapping;
 import com.example.course_work.data_mapping.LongMapping;
 
@@ -136,6 +137,10 @@ public class MainActivity extends AppCompatActivity {
                 );
                 break;
             case 2:
+                dataTypeMapping = new FloatMapping(
+                        memory, memory_dump, text_field, big_endian, x, y, width
+                );
+                break;
             case 3:
             case 0:
             default:

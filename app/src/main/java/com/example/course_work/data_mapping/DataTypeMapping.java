@@ -26,7 +26,7 @@ public abstract class DataTypeMapping {
     Switch big_endian;
     boolean[][] real_memory_flags;
 
-    public static final String allowed = "0123456789-";
+    public static final String allowed = "0123456789.-";
     public static final StandardInputField mappingInputFilter = new StandardInputField(allowed);
 
     public StringBuilder getAsMemoryDump() {
