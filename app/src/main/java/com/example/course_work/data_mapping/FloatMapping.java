@@ -120,8 +120,8 @@ public class FloatMapping extends DataTypeMapping {
                     catch (NumberFormatException e) {
                         real_memory[y][x] = Float.parseFloat(prev);
                         input_field.setText(prev);
-                        Toast.makeText(MainActivity.getContext(), "Number is to big! " +
-                                "Try type long instead", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.getContext(), "Number is incorrect",
+                                Toast.LENGTH_SHORT).show();
                     }
                     updateByteArray(y, x);
                 }
@@ -174,11 +174,6 @@ public class FloatMapping extends DataTypeMapping {
     }
 
     @Override
-    public int getInputType() {
-        return InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED;
-    }
-
-    @Override
     public void setBoolean(boolean[][] old_memory) {
         if (old_memory == null)
             return;
@@ -205,11 +200,18 @@ public class FloatMapping extends DataTypeMapping {
                     real_memory_flags[line][i] = old_memory[line][i / coef];
             }
         }
+
+        fullUpdate();
     }
 
     @Override
     public AdapterView.OnItemSelectedListener getAddressXListener() {
         return listener_x;
+    }
+
+    @Override
+    public int getInputType() {
+        return InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED;
     }
 
     @Override
