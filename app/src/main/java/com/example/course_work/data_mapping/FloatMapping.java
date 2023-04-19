@@ -1,5 +1,7 @@
 package com.example.course_work.data_mapping;
 
+import static java.lang.Math.min;
+
 import android.annotation.SuppressLint;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -31,7 +33,7 @@ public class FloatMapping extends DataTypeMapping {
             if (real_memory_flags[y][x]) {
                 String res = new BigDecimal(real_memory[y][x]).toPlainString();
                 int idx = res.indexOf('.');
-                input_field.setText(res.substring(0, 48 + idx));
+                input_field.setText(res.substring(0, min(48 + idx, res.length())));
             }
             else {
                 just_cleared = true;
@@ -54,7 +56,7 @@ public class FloatMapping extends DataTypeMapping {
             if (real_memory_flags[y][x]) {
                 String res = new BigDecimal(real_memory[y][x]).toPlainString();
                 int idx = res.indexOf('.');
-                input_field.setText(res.substring(0, 48 + idx));
+                input_field.setText(res.substring(0, min(48 + idx, res.length())));
             }
             else {
                 just_cleared = true;
