@@ -5,10 +5,12 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.example.course_work.MainActivity;
 import com.example.course_work.StandardInputField;
 
 public abstract class DataTypeMapping {
@@ -22,18 +24,34 @@ public abstract class DataTypeMapping {
     boolean just_cleared = false;
 
     TextWatcher watcher;
-    @SuppressLint("UseSwitchCompatOrMaterialCode")
-    Switch big_endian;
+    Button big_endian;
     boolean[][] real_memory_flags;
 
     public static final String allowed = "0123456789.-";
     public static final StandardInputField mappingInputFilter = new StandardInputField(allowed);
 
+    public DataTypeMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
+                           Button big_endian) {
+        this.memory_dump = memory_dump;
+        this.memory_text = memory_text;
+        this.big_endian = big_endian;
+        this.input_field = input_field;
+
+        big_endian.setOnClickListener(v -> {
+            MainActivity.big_endian_flag = !MainActivity.big_endian_flag;
+            if (MainActivity.big_endian_flag)
+                big_endian.setText(MainActivity.BIG_ENDIAN);
+            else
+                big_endian.setText(MainActivity.LITTLE_ENDIAN);
+            memory_text.setText(getAsMemoryDump());
+        });
+    }
+
     public StringBuilder getAsMemoryDump() {
         StringBuilder dump = new StringBuilder();
 
         int delta = 16 / width;
-        boolean bn = big_endian.isChecked();
+        boolean bn = MainActivity.big_endian_flag;
 
         // Перебираем все строки в памяти
         for (byte[] line: memory_dump) {

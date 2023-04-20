@@ -9,6 +9,7 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -77,14 +78,9 @@ public class CharMapping extends DataTypeMapping{
     }
 
     public CharMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
-                       @SuppressLint("UseSwitchCompatOrMaterialCode") Switch big_endian,
+                       Button big_endian,
                        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch cyrillic) {
-        super();
-
-        this.memory_dump = memory_dump;
-        this.memory_text = memory_text;
-        this.big_endian = big_endian;
-        this.input_field = input_field;
+        super(memory_dump, memory_text, input_field, big_endian);
         this.cyrillic = cyrillic;
 
         width = cyrillic.isChecked() ? 8 : 16;
@@ -93,8 +89,6 @@ public class CharMapping extends DataTypeMapping{
 
         for (char[] line : real_memory)
             Arrays.fill(line, '\0');
-
-        big_endian.setOnCheckedChangeListener((buttonView, isChecked) -> memory_text.setText(getAsMemoryDump()));
 
         cyrillic.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

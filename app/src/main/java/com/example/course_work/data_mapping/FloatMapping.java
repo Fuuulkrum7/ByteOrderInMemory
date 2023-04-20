@@ -10,6 +10,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -71,7 +72,7 @@ public class FloatMapping extends DataTypeMapping {
     };
 
     public FloatMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
-                        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch big_endian,
+                        Button big_endian,
                         int x, int y, int width) {
         this(memory_dump, memory_text, input_field, big_endian);
 
@@ -87,19 +88,12 @@ public class FloatMapping extends DataTypeMapping {
     }
 
     public FloatMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
-                        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch big_endian) {
-        super();
+                        Button big_endian) {
+        super(memory_dump, memory_text, input_field, big_endian);
 
         width = 4;
         this.real_memory_flags = new boolean[height][width];
         this.real_memory = new float[height][width];
-
-        this.memory_dump = memory_dump;
-        this.memory_text = memory_text;
-        this.big_endian = big_endian;
-        this.input_field = input_field;
-
-        big_endian.setOnCheckedChangeListener((buttonView, isChecked) -> memory_text.setText(getAsMemoryDump()));
 
         watcher = new TextWatcher() {
             String prev;

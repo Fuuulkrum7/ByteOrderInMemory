@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -30,17 +31,21 @@ public class MainActivity extends AppCompatActivity {
     public static final String APP_PREFERENCES_CYRILLIC = "cyrillic";
     public static final String APP_PREFERENCES_DATATYPE = "datatype_pos";
     public static final String APP_PREFERENCES_BIG_ENDIAN = "big_endian";
+    public static final String BIG_ENDIAN = "Big";
+    public static final String LITTLE_ENDIAN = "Little";
     LinearLayout input_field;
     EditText text_field;
     TextView memory_dump;
     TextView address;
     Spinner datatype, address_y, address_x;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
-    Switch cyrillic, big_endian;
+    Switch cyrillic;
+    Button big_endian;
     int height = DataTypeMapping.height;
     byte[][] memory = new byte[height][16];
     int address_number = Integer.parseInt("100000", 16);
     DataTypeMapping dataTypeMapping = null;
+    public static boolean big_endian_flag = false;
 
 
     @SuppressLint("StaticFieldLeak")
@@ -55,7 +60,8 @@ public class MainActivity extends AppCompatActivity {
         text_field = findViewById(R.id.text_field);
         datatype = findViewById(R.id.datatype);
         cyrillic = findViewById(R.id.cyrillic);
-        big_endian = findViewById(R.id.big_endian);
+
+        big_endian = findViewById(R.id.endian);
 
         address = findViewById(R.id.address);
         address_x = findViewById(R.id.address_x);
@@ -96,7 +102,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Загрузка значний перменных из постоянной памяти
         cyrillic.setChecked(settings.getBoolean(APP_PREFERENCES_CYRILLIC, false));
-        big_endian.setChecked(settings.getBoolean(APP_PREFERENCES_BIG_ENDIAN, false));
+        big_endian_flag = settings.getBoolean(APP_PREFERENCES_BIG_ENDIAN, false);
+        if (!big_endian_flag) {
+            big_endian.setText(LITTLE_ENDIAN);
+        }
 
         int val = settings.getInt(APP_PREFERENCES_DATATYPE, 0);
         datatype.setSelection(val);
@@ -180,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences settings = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit();
         editor.putBoolean(APP_PREFERENCES_CYRILLIC, cyrillic.isChecked());
-        editor.putBoolean(APP_PREFERENCES_BIG_ENDIAN, big_endian.isChecked());
+        editor.putBoolean(APP_PREFERENCES_BIG_ENDIAN, big_endian_flag);
         editor.putInt(APP_PREFERENCES_DATATYPE, datatype.getSelectedItemPosition());
 
         editor.apply();

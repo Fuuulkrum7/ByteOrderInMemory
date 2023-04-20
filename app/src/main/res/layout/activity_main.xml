@@ -116,9 +116,9 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
             android:layout_marginTop="5dp"
-            android:layout_marginRight="5dp"
+            android:layout_marginEnd="5dp"
             android:layout_marginBottom="10dp"
             android:orientation="horizontal">
 
@@ -132,13 +132,37 @@
                 android:textSize="20sp"
                 tools:ignore="TouchTargetSizeCheck,UseSwitchCompatOrMaterialXml" />
 
-            <Switch
-                android:id="@+id/big_endian"
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.8"
+                android:fontFamily="@font/source_code_pro_medium"
+                android:text="Endian:"
+                android:textColor="@color/secondaryTextColor"
+                android:textSize="20sp"
+                tools:ignore="NestedWeights" />
+
+            <Button
+                android:id="@+id/endian"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:fontFamily="@font/source_code_pro_medium"
-                android:text="Big-Endian"
+                android:text="Big endian"
+                android:textAllCaps="false"
                 android:textSize="18sp" />
         </LinearLayout>
 
@@ -148,7 +172,7 @@
         android:id="@+id/adress_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="150dp"
+        android:layout_marginTop="128dp"
         android:gravity="center"
         android:text="@string/adress_name"
         android:textSize="20sp"

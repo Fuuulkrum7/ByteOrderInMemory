@@ -8,6 +8,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -63,7 +64,7 @@ public class LongMapping extends DataTypeMapping {
     };
 
     public LongMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
-                       @SuppressLint("UseSwitchCompatOrMaterialCode") Switch big_endian,
+                       Button big_endian,
                        int x, int y, int width) {
         this(memory_dump, memory_text, input_field, big_endian);
 
@@ -77,23 +78,12 @@ public class LongMapping extends DataTypeMapping {
     }
 
     public LongMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
-                      @SuppressLint("UseSwitchCompatOrMaterialCode") Switch big_endian) {
-        super();
+                      Button big_endian) {
+        super(memory_dump, memory_text, input_field, big_endian);
 
         width = 2;
         this.real_memory_flags = new boolean[height][width];
         this.real_memory = new long[height][width];
-        this.memory_dump = memory_dump;
-        this.memory_text = memory_text;
-        this.big_endian = big_endian;
-        this.input_field = input_field;
-
-        big_endian.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                memory_text.setText(getAsMemoryDump());
-            }
-        });
 
         watcher = new TextWatcher() {
             String prev;
@@ -218,7 +208,7 @@ public class LongMapping extends DataTypeMapping {
                     // Если выбран порядок байтов биг-ендиан и текущий индекс не последний
                     // И при этом данные в следующей ячейке памяти есть, то, чтобы их порядок соответствовал
                     // big-endian, меняем их в памяти местами.
-                    if (big_endian.isChecked() && bool_idx < (i + 1) * sub_len - 1 && old_memory[line][bool_idx + 1]) {
+                    if (MainActivity.big_endian_flag && bool_idx < (i + 1) * sub_len - 1 && old_memory[line][bool_idx + 1]) {
                         data <<= 8L * old_memory[0].length;
                         coef = 1;
                     }
