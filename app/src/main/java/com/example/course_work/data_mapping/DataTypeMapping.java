@@ -27,8 +27,16 @@ public abstract class DataTypeMapping {
     Button big_endian;
     boolean[][] real_memory_flags;
 
-    public static final String allowed = "0123456789.-";
-    public static final StandardInputField mappingInputFilter = new StandardInputField(allowed);
+    public String allowed = "0123456789.-";
+    public static StandardInputField mappingInputFilter;
+
+    public DataTypeMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
+                           Button big_endian, String allowed) {
+        this(memory_dump, memory_text, input_field, big_endian);
+
+        this.allowed = allowed;
+        mappingInputFilter = new StandardInputField(allowed);
+    }
 
     public DataTypeMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
                            Button big_endian) {
@@ -36,6 +44,8 @@ public abstract class DataTypeMapping {
         this.memory_text = memory_text;
         this.big_endian = big_endian;
         this.input_field = input_field;
+
+        mappingInputFilter = new StandardInputField(allowed);
 
         big_endian.setOnClickListener(v -> {
             MainActivity.big_endian_flag = !MainActivity.big_endian_flag;
@@ -88,6 +98,10 @@ public abstract class DataTypeMapping {
 
     public InputFilter[] getInputFilter() {
         return new InputFilter[] {mappingInputFilter.getFilter()};
+    }
+
+    void updateAllowed() {
+        mappingInputFilter.allowed = allowed;
     }
 
     public int getInputType() {

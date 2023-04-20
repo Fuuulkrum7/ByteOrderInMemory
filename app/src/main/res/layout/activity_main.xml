@@ -161,7 +161,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:fontFamily="@font/source_code_pro_medium"
-                android:text="Big endian"
+                android:text="Big"
                 android:textAllCaps="false"
                 android:textSize="18sp" />
         </LinearLayout>

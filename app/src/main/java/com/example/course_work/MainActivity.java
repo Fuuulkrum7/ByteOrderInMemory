@@ -17,6 +17,7 @@ import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.example.course_work.data_mapping.CharMapping;
 import com.example.course_work.data_mapping.DataTypeMapping;
 import com.example.course_work.data_mapping.FloatMapping;
 import com.example.course_work.data_mapping.IntMapping;
@@ -151,6 +152,10 @@ public class MainActivity extends AppCompatActivity {
                 );
                 break;
             case 3:
+                dataTypeMapping = new CharMapping(
+                        memory, memory_dump, text_field, big_endian, cyrillic, x, y, width
+                );
+                break;
             case 0:
             default:
                 dataTypeMapping = new IntMapping(memory, memory_dump,

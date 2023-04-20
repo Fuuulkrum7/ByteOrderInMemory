@@ -5,7 +5,7 @@ import android.text.Spanned;
 import android.util.Log;
 
 public class StandardInputField {
-    String allowed;
+    public String allowed;
 
     InputFilter inputFilter = new InputFilter() {
         @Override

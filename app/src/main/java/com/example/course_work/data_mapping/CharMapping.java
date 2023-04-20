@@ -7,6 +7,7 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -21,7 +22,7 @@ import com.example.course_work.MainActivity;
 import java.util.Arrays;
 
 public class CharMapping extends DataTypeMapping{
-    char real_memory[][];
+    char[][] real_memory;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     Switch cyrillic;
 
@@ -50,7 +51,7 @@ public class CharMapping extends DataTypeMapping{
     };
 
     public CharMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
-                       @SuppressLint("UseSwitchCompatOrMaterialCode") Switch big_endian,
+                       Button big_endian,
                        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch cyrillic,
                        int x, int y, int width) {
         this(memory_dump, memory_text, input_field, big_endian, cyrillic);
@@ -66,21 +67,11 @@ public class CharMapping extends DataTypeMapping{
         this.y = y;
     }
 
-    private boolean parseStringToArr(String s) {
-        for (int i = 0; i < s.length(); ++i) {
-            if (y + (x + i) / width >= 10)
-                return false;
-            real_memory[y + (x + i) / width][y + (x + i) % width] = s.charAt(i);
-            real_memory_flags[y + (x + i) / width][y + (x + i) % width] = true;
-        }
-
-        return true;
-    }
-
     public CharMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
                        Button big_endian,
                        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch cyrillic) {
-        super(memory_dump, memory_text, input_field, big_endian);
+        super(memory_dump, memory_text, input_field, big_endian,
+                "1234567890-_=+!@#$%^&*()qwertyuiopasdfghjklzxcvbnmm[];'./,<>?:\"\\|QWERTYUIOPASDFGHJKLZXCVBNM");
         this.cyrillic = cyrillic;
 
         width = cyrillic.isChecked() ? 8 : 16;
@@ -94,13 +85,19 @@ public class CharMapping extends DataTypeMapping{
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 width = isChecked ? 8 : 16;
-                real_memory_flags = new boolean[height][width];
+
                 char[][] prev = real_memory.clone();
+                boolean[][] prev_flags = real_memory_flags.clone();
+
                 real_memory = new char[height][width];
+                real_memory_flags = new boolean[height][width];
 
                 int n = min(width, prev[0].length);
-                for (int i = 0; i < height * n; ++i)
+                for (int i = 0; i < height * n; ++i) {
                     real_memory[i / width][i % width] = prev[i / prev[0].length][i % prev[0].length];
+                    real_memory_flags[i / width][i % width] = prev_flags[i / prev[0].length][i % prev[0].length];
+                }
+                input_field.setInputType(getInputType());
                 fullUpdate();
             }
         });
@@ -115,25 +112,16 @@ public class CharMapping extends DataTypeMapping{
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String str = input_field.getText().toString();
-                if (str.length() > 0 && (('0' <= str.charAt(0) && str.charAt(0) <= '9') || str.length() > 1)) {
-                    real_memory_flags[y][x] = true;
 
-                    if (!parseStringToArr(str)) {
-                        parseStringToArr(prev);
-                        input_field.setText(prev);
-                        Toast.makeText(MainActivity.getContext(), "Text is too long",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                    updateByteArray(y, x);
-                }
-                else if (s.length() == 0 && !just_cleared) {
-                    real_memory_flags[y][x] = false;
-                    int size = 16 / real_memory[0].length;
+                real_memory_flags[y][x] = str.length() > 0;
 
-                    for (int i = x * size; i < (x + 1) * size; ++i) {
-                        memory_dump[y][i] = '\0';
-                    }
+                if (!parseStringToArr(str)) {
+                    parseStringToArr(prev);
+                    input_field.setText(prev);
+                    Toast.makeText(MainActivity.getContext(), "Text is too long",
+                            Toast.LENGTH_SHORT).show();
                 }
+                updateByteArray(y, x);
 
                 if (just_cleared)
                     just_cleared = false;
@@ -146,23 +134,37 @@ public class CharMapping extends DataTypeMapping{
         };
     }
 
+    private boolean parseStringToArr(String s) {
+        for (int i = 0; i < s.length() + 1; ++i) {
+            if (i < s.length()) {
+                if (y + (x + i) / width >= 10)
+                    return false;
+                real_memory[y + (x + i) / width][y + (x + i) % width] = s.charAt(i);
+            }
+            else
+                real_memory[y + (x + i) / width][y + (x + i) % width] = '\0';
+
+            real_memory_flags[y + (x + i) / width][y + (x + i) % width] = true;
+        }
+
+        return true;
+    }
+
     private void updateByteArray(int i, int j) {
         // Получаем число байтов, которые будут задействованы при записи
         int size = 16 / width;
+        int k = 0;
 
-        int bits = Float.floatToIntBits(real_memory[i][j]);
-        String digit = String.format("%8s", Integer.toHexString(bits)).replace(" ", "0");
-
-        // Перебираем массив байтов
-        for (int k = j * size, n = digit.length() - 1; k < (j + 1) * size && real_memory_flags[i][j]; ++k, n -= 2) {
-            byte dgt = Byte.parseByte(String.valueOf(digit.charAt(n - 1)), 16);
-            dgt <<= 4;
-            dgt += Byte.parseByte(String.valueOf(digit.charAt(n)), 16);
-
-            dgt -= 128;
-
-            memory_dump[i][k] = dgt;
-        }
+        do {
+            char chr = real_memory[i + (j + k) / width][(j + k) % width];
+            // Перебираем массив байтов
+            for (int l = 0; l < size; ++l) {
+                memory_dump[i + (j + k) / width][((j + k) % width) * size + l]
+                        = (byte) (chr - 128);
+                chr >>= 8;
+            }
+            ++k;
+        } while (real_memory[i + (j + k - 1) / width][(j + k - 1) % width] != '\0');
     }
 
     private void fullUpdate() {
@@ -176,12 +178,35 @@ public class CharMapping extends DataTypeMapping{
 
     @Override
     public StringBuilder getAsMemoryDump() {
-        return null;
+        StringBuilder dump = new StringBuilder();
+        if (width == 16) {
+            for (byte[] line : memory_dump) {
+                for (int i = 0; i < line.length; ++i) {
+                    String str = Integer.toHexString(line[i] + 128).toUpperCase();
+                    // Если один символ, до добавляем 0, чтобыв не сместилась строка
+                    if (str.length() == 1)
+                        str = '0' + str;
+                    dump.append(str);
+
+                    // Если мы не в конце и не надо добавлять разделитель
+                    if (i < line.length - 1)
+                        dump.append('|');
+                }
+                dump.append('\n');
+            }
+        }
+        else {
+            dump = super.getAsMemoryDump();
+        }
+
+        return dump;
     }
 
     @Override
     public InputFilter[] getInputFilter() {
-        return new InputFilter[] {new InputFilter.LengthFilter(16)};
+        if (width == 8)
+            return new InputFilter[] {new InputFilter.LengthFilter(40)};
+        return super.getInputFilter();
     }
 
     @Override
