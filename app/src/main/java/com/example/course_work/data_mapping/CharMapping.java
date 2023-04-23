@@ -29,7 +29,19 @@ public class CharMapping extends DataTypeMapping{
     AdapterView.OnItemSelectedListener listener_x = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            char val = parent.getItemAtPosition(position).toString().charAt(1);
+            int c = Integer.parseInt(String.valueOf(val), 16) / (16 / width);
 
+            if (c == x)
+                return;
+
+            x = c;
+
+            just_cleared = true;
+            if (real_memory_flags[y][x])
+                input_field.setText(fromArrayToString(y, x));
+            else
+                input_field.setText("");
         }
 
         @Override
@@ -41,7 +53,13 @@ public class CharMapping extends DataTypeMapping{
     AdapterView.OnItemSelectedListener listener_y = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            y = position;
 
+            just_cleared = true;
+            if (real_memory_flags[y][x])
+                input_field.setText(fromArrayToString(y, x));
+            else
+                input_field.setText("");
         }
 
         @Override
@@ -78,8 +96,7 @@ public class CharMapping extends DataTypeMapping{
         this.real_memory_flags = new boolean[height][width];
         this.real_memory = new char[height][width];
 
-        for (char[] line : real_memory)
-            Arrays.fill(line, '\0');
+        for (char[] chars : real_memory) Arrays.fill(chars, '\0');
 
         cyrillic.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -112,16 +129,30 @@ public class CharMapping extends DataTypeMapping{
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String str = input_field.getText().toString();
+                // Log.d(MainActivity.TAG, str + " " + prev);
 
-                real_memory_flags[y][x] = str.length() > 0;
+                int delta = 1;
+                if (y + (x + s.length() + 1) / width < 10 && str.length() > prev.length() &&
+                        real_memory[y + (x + s.length()) / width][(x + s.length()) % width] != '\0')
+                    delta = 0;
 
-                if (!parseStringToArr(str)) {
-                    parseStringToArr(prev);
+                if (!parseStringToArr(str, delta)) {
+                    parseStringToArr(prev, delta);
+                    just_cleared = true;
+
+                    if (x == 15 && y == 9)
+                        real_memory_flags[9][15] = false;
+
                     input_field.setText(prev);
                     Toast.makeText(MainActivity.getContext(), "Text is too long",
                             Toast.LENGTH_SHORT).show();
                 }
+
                 updateByteArray(y, x);
+
+                if (str.length() < prev.length() && !just_cleared) {
+                    removeOldBytes(y, x, str.length(), prev.length());
+                }
 
                 if (just_cleared)
                     just_cleared = false;
@@ -134,20 +165,50 @@ public class CharMapping extends DataTypeMapping{
         };
     }
 
-    private boolean parseStringToArr(String s) {
-        for (int i = 0; i < s.length() + 1; ++i) {
-            if (i < s.length()) {
-                if (y + (x + i) / width >= 10)
-                    return false;
-                real_memory[y + (x + i) / width][y + (x + i) % width] = s.charAt(i);
-            }
-            else
-                real_memory[y + (x + i) / width][y + (x + i) % width] = '\0';
+    private StringBuilder fromArrayToString(int i, int j) {
+        StringBuilder str = new StringBuilder();
 
-            real_memory_flags[y + (x + i) / width][y + (x + i) % width] = true;
+        for (int k = 0; real_memory[i + (j + k) / width][(j + k ) % width] != '\0'; ++k) {
+            if (real_memory_flags[i + (j + k) / width][(j + k) % width])
+                str.append(real_memory[i + (j + k) / width][(j + k) % width]);
+        }
+
+        return str;
+    }
+
+    private boolean parseStringToArr(String s, int delta) {
+        for (int i = 0; i < s.length() + delta; ++i) {
+            if (y + (x + i) / width >= 10)
+                return false;
+
+            if (i < s.length())
+                real_memory[y + (x + i) / width][(x + i) % width] = s.charAt(i);
+            else
+                real_memory[y + (x + i) / width][(x + i) % width] = '\0';
+
+            if (s.length() > 0)
+                real_memory_flags[y + (x + i) / width][(x + i) % width] = true;
         }
 
         return true;
+    }
+
+    private void removeOldBytes(int i, int j, int start, int end) {
+        // Получаем число байтов, которые будут задействованы при записи
+        int size = 16 / width;
+
+        if (start != 0 || (j > 0 && real_memory_flags[i + (j - 1) / width][(j - 1) % width]))
+            start += 1;
+
+        for (int k = start; k < end + 1; ++k) {
+            if (real_memory_flags[i + (j + k) / width][(j + k) % width]) {
+                real_memory[i + (j + k) / width][(j + k) % width] = '\0';
+                real_memory_flags[i + (j + k) / width][(j + k) % width] = false;
+                // Перебираем массив байтов
+                for (int l = 0; l < size; ++l)
+                    memory_dump[i + (j + k) / width][((j + k) % width) * size + l] = 127;
+            }
+        }
     }
 
     private void updateByteArray(int i, int j) {
@@ -156,12 +217,14 @@ public class CharMapping extends DataTypeMapping{
         int k = 0;
 
         do {
-            char chr = real_memory[i + (j + k) / width][(j + k) % width];
-            // Перебираем массив байтов
-            for (int l = 0; l < size; ++l) {
-                memory_dump[i + (j + k) / width][((j + k) % width) * size + l]
-                        = (byte) (chr - 128);
-                chr >>= 8;
+            if (real_memory_flags[i + (j + k) / width][(j + k) % width]) {
+                char chr = real_memory[i + (j + k) / width][(j + k) % width];
+                // Перебираем массив байтов
+                for (int l = 0; l < size; ++l) {
+                    memory_dump[i + (j + k) / width][((j + k) % width) * size + l]
+                            = (byte) (chr - 128);
+                    chr >>= 8;
+                }
             }
             ++k;
         } while (real_memory[i + (j + k - 1) / width][(j + k - 1) % width] != '\0');
@@ -216,7 +279,7 @@ public class CharMapping extends DataTypeMapping{
 
     @Override
     public void setBoolean(boolean[][] old_memory) {
-
+        fullUpdate();
     }
 
     @Override

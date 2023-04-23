@@ -28,7 +28,7 @@ public abstract class DataTypeMapping {
     boolean[][] real_memory_flags;
 
     public String allowed = "0123456789.-";
-    public static StandardInputField mappingInputFilter;
+    public StandardInputField mappingInputFilter = new StandardInputField(allowed);
 
     public DataTypeMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
                            Button big_endian, String allowed) {
@@ -44,8 +44,6 @@ public abstract class DataTypeMapping {
         this.memory_text = memory_text;
         this.big_endian = big_endian;
         this.input_field = input_field;
-
-        mappingInputFilter = new StandardInputField(allowed);
 
         big_endian.setOnClickListener(v -> {
             MainActivity.big_endian_flag = !MainActivity.big_endian_flag;

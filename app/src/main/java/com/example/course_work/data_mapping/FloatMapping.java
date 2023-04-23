@@ -32,9 +32,15 @@ public class FloatMapping extends DataTypeMapping {
             x = Integer.parseInt(String.valueOf(val), 16) / (16 / width);
 
             if (real_memory_flags[y][x]) {
-                String res = new BigDecimal(real_memory[y][x]).toPlainString();
-                int idx = res.indexOf('.');
-                input_field.setText(res.substring(0, min(48 + idx, res.length())));
+                if (Float.isInfinite(real_memory[y][x]) || Float.isNaN(real_memory[y][x])) {
+                    Toast.makeText(MainActivity.getContext(), "Oh, you've got NaN or infinity!",
+                            Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    String res = new BigDecimal(real_memory[y][x]).toPlainString();
+                    int idx = res.indexOf('.');
+                    input_field.setText(res.substring(0, min(48 + idx, res.length())));
+                }
             }
             else {
                 just_cleared = true;

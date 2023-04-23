@@ -9,7 +9,7 @@
         <item>int</item>
         <item>long</item>
         <item>float</item>
-        <item>char</item>
+        <item>string</item>
     </string-array>
     <string-array name="counter_as_16">
         <item>0</item>

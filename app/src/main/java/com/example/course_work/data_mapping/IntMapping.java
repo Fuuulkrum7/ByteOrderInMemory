@@ -253,7 +253,7 @@ public class IntMapping extends DataTypeMapping{
                         real_memory_flags[line][bool_idx] = old_memory[line][i];
                     }
 
-                    if (MainActivity.big_endian_flag && old_memory[line][i]) {
+                    if (MainActivity.big_endian_flag && old_memory[line][i] && old_memory[0].length != real_memory_flags[0].length) {
                         int a = real_memory[line][i * sub_len];
                         real_memory[line][i * sub_len] = real_memory[line][i * sub_len + 1];
                         real_memory[line][i * sub_len + 1] = a;

@@ -175,14 +175,14 @@ public class MainActivity extends AppCompatActivity {
                 .simple_spinner_dropdown_item);
         address_x.setAdapter(spinnerArrayAdapter);
 
-        address_x.setOnItemSelectedListener(dataTypeMapping.getAddressXListener());
-        address_y.setOnItemSelectedListener(dataTypeMapping.getAddressYListener());
-
         address_x.setSelection(dataTypeMapping.getX());
 
         text_field.setInputType(dataTypeMapping.getInputType());
         text_field.setFilters(dataTypeMapping.getInputFilter());
         text_field.addTextChangedListener(dataTypeMapping.getTextWatcher());
+
+        address_x.setOnItemSelectedListener(dataTypeMapping.getAddressXListener());
+        address_y.setOnItemSelectedListener(dataTypeMapping.getAddressYListener());
 
         dataTypeMapping.setBoolean(old_memory);
     }
