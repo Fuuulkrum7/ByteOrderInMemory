@@ -23,6 +23,7 @@ import java.util.Arrays;
 
 public class CharMapping extends DataTypeMapping{
     char[][] real_memory;
+    boolean class_just_init = true;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     Switch cyrillic;
 
@@ -30,12 +31,10 @@ public class CharMapping extends DataTypeMapping{
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             char val = parent.getItemAtPosition(position).toString().charAt(1);
-            int c = Integer.parseInt(String.valueOf(val), 16) / (16 / width);
+            x = Integer.parseInt(String.valueOf(val), 16) / (16 / width);
 
-            if (c == x)
+            if (class_just_init)
                 return;
-
-            x = c;
 
             just_cleared = true;
             if (real_memory_flags[y][x])
@@ -55,7 +54,11 @@ public class CharMapping extends DataTypeMapping{
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             y = position;
 
+            if (class_just_init)
+                return;
+
             just_cleared = true;
+
             if (real_memory_flags[y][x])
                 input_field.setText(fromArrayToString(y, x));
             else
@@ -89,7 +92,7 @@ public class CharMapping extends DataTypeMapping{
                        Button big_endian,
                        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch cyrillic) {
         super(memory_dump, memory_text, input_field, big_endian,
-                "1234567890-_=+!@#$%^&*()qwertyuiopasdfghjklzxcvbnmm[];'./,<>?:\"\\|QWERTYUIOPASDFGHJKLZXCVBNM");
+                "");
         this.cyrillic = cyrillic;
 
         width = cyrillic.isChecked() ? 8 : 16;
@@ -103,19 +106,21 @@ public class CharMapping extends DataTypeMapping{
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 width = isChecked ? 8 : 16;
 
-                char[][] prev = real_memory.clone();
+//                char[][] prev = real_memory.clone();
                 boolean[][] prev_flags = real_memory_flags.clone();
 
                 real_memory = new char[height][width];
                 real_memory_flags = new boolean[height][width];
 
-                int n = min(width, prev[0].length);
-                for (int i = 0; i < height * n; ++i) {
-                    real_memory[i / width][i % width] = prev[i / prev[0].length][i % prev[0].length];
-                    real_memory_flags[i / width][i % width] = prev_flags[i / prev[0].length][i % prev[0].length];
-                }
-                input_field.setInputType(getInputType());
-                fullUpdate();
+                setBoolean(prev_flags);
+
+//                int n = min(width, prev[0].length);
+//                for (int i = 0; i < height * n; ++i) {
+//                    real_memory[i / width][i % width] = prev[i / prev[0].length][i % prev[0].length];
+//                    real_memory_flags[i / width][i % width] = prev_flags[i / prev[0].length][i % prev[0].length];
+//                }
+//                input_field.setInputType(getInputType());
+//                fullUpdate();
             }
         });
 
@@ -128,8 +133,9 @@ public class CharMapping extends DataTypeMapping{
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                class_just_init = false;
                 String str = input_field.getText().toString();
-                // Log.d(MainActivity.TAG, str + " " + prev);
+                Log.d(MainActivity.TAG, str + " " + prev);
 
                 int delta = 1;
                 if (y + (x + s.length() + 1) / width < 10 && str.length() > prev.length() &&
@@ -165,15 +171,17 @@ public class CharMapping extends DataTypeMapping{
         };
     }
 
-    private StringBuilder fromArrayToString(int i, int j) {
+    private String fromArrayToString(int i, int j) {
         StringBuilder str = new StringBuilder();
 
-        for (int k = 0; real_memory[i + (j + k) / width][(j + k ) % width] != '\0'; ++k) {
+        for (int k = 0; real_memory[i + (j + k) / width][(j + k) % width] != '\0'; ++k) {
             if (real_memory_flags[i + (j + k) / width][(j + k) % width])
                 str.append(real_memory[i + (j + k) / width][(j + k) % width]);
         }
 
-        return str;
+        Log.d(MainActivity.TAG, str.toString());
+
+        return str.toString();
     }
 
     private boolean parseStringToArr(String s, int delta) {
@@ -279,7 +287,49 @@ public class CharMapping extends DataTypeMapping{
 
     @Override
     public void setBoolean(boolean[][] old_memory) {
-        fullUpdate();
+        if (old_memory == null)
+            return;
+
+        for (int i = 0; i < height; ++i) {
+            int char_len = 16 / width;
+
+            if (width > old_memory[0].length) {
+                for (int sub_index = 0; sub_index < old_memory[0].length; ++sub_index) {
+                    int delta = width / old_memory[0].length;
+                    for (int j = sub_index * delta; j < (sub_index + 1) * delta; ++j) {
+                        char ch = 0;
+                        for (int k = j * char_len; k < (j + 1) * char_len && old_memory[i][sub_index]; ++k) {
+                            ch += memory_dump[i][k] + 128;
+                        }
+                        real_memory_flags[i][j] = old_memory[i][sub_index];
+                        real_memory[i][j] = ch;
+                    }
+                }
+            }
+            else {
+                for (int sub_index = 0; sub_index < width; ++sub_index) {
+                    int delta = old_memory[0].length / width;
+                    char ch = 0;
+                    for (int j = sub_index * delta; j < (sub_index + 1) * delta && old_memory[i][j]; ++j) {
+                        ch <<= 8;
+                        ch += memory_dump[i][j] + 128;
+                        real_memory_flags[i][sub_index] |= old_memory[i][j];
+                    }
+                    real_memory[i][sub_index] = ch;
+                }
+            }
+        }
+
+        just_cleared = true;
+
+        for (char[] line : real_memory)
+            Log.d(MainActivity.TAG, Arrays.toString(line));
+
+        if (real_memory_flags[y][x])
+            input_field.setText(fromArrayToString(y, x));
+
+//        fullUpdate();
+        memory_text.setText(getAsMemoryDump());
     }
 
     @Override

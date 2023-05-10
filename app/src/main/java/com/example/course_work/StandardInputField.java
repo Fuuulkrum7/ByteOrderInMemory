@@ -16,7 +16,7 @@ public class StandardInputField {
             if (source != null) {
                 // Меняем их на пустую строку
                 for (int i = 0; i < source.length(); ++i) {
-                    if (!allowed.contains(("" + source.charAt(i))))
+                    if (!allowed.contains(("" + source.charAt(i))) && allowed.length() > 0)
                         d = "";
                     else
                         return null;
