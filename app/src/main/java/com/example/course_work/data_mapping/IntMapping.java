@@ -177,6 +177,7 @@ public class IntMapping extends DataTypeMapping{
 
         int full_len = 16 / width;
 
+        // TODO fix bug here
         if (old_memory[0].length > real_memory_flags[0].length) {
             // Итерируемся по каждой строке памяти
             for (int line = 0; line < real_memory.length; ++line) {

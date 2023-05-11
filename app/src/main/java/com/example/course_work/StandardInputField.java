@@ -5,7 +5,7 @@ import android.text.Spanned;
 import android.util.Log;
 
 public class StandardInputField {
-    public String allowed;
+    public int target = 256;
 
     InputFilter inputFilter = new InputFilter() {
         @Override
@@ -16,7 +16,7 @@ public class StandardInputField {
             if (source != null) {
                 // Меняем их на пустую строку
                 for (int i = 0; i < source.length(); ++i) {
-                    if (!allowed.contains(("" + source.charAt(i))) && allowed.length() > 0)
+                    if (source.charAt(i) >= target)
                         d = "";
                     else
                         return null;
@@ -27,8 +27,8 @@ public class StandardInputField {
         }
     };
 
-    public StandardInputField(String allowed) {
-        this.allowed = allowed;
+    public StandardInputField(int target) {
+        this.target = target;
     }
 
     public InputFilter getFilter() {

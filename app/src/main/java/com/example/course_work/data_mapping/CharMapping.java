@@ -10,9 +10,11 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,10 +24,13 @@ import com.example.course_work.MainActivity;
 import java.util.Arrays;
 
 public class CharMapping extends DataTypeMapping{
+    public final static int ALLOWED_BYTE = 256;
+    public final static int HIGH_BYTE = 70000;
     char[][] real_memory;
     boolean class_just_init = true;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     Switch cyrillic;
+    Spinner address_x;
 
     AdapterView.OnItemSelectedListener listener_x = new AdapterView.OnItemSelectedListener() {
         @Override
@@ -72,10 +77,10 @@ public class CharMapping extends DataTypeMapping{
     };
 
     public CharMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
-                       Button big_endian,
+                       Button big_endian, Spinner address_x,
                        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch cyrillic,
                        int x, int y, int width) {
-        this(memory_dump, memory_text, input_field, big_endian, cyrillic);
+        this(memory_dump, memory_text, input_field, big_endian, address_x, cyrillic);
 
         if (width != 0) {
             if (width > getWidth())
@@ -89,11 +94,12 @@ public class CharMapping extends DataTypeMapping{
     }
 
     public CharMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
-                       Button big_endian,
+                       Button big_endian, Spinner address_x,
                        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch cyrillic) {
         super(memory_dump, memory_text, input_field, big_endian,
-                "");
+                cyrillic.isChecked() ? HIGH_BYTE : ALLOWED_BYTE);
         this.cyrillic = cyrillic;
+        this.address_x = address_x;
 
         width = cyrillic.isChecked() ? 8 : 16;
         this.real_memory_flags = new boolean[height][width];
@@ -106,21 +112,19 @@ public class CharMapping extends DataTypeMapping{
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 width = isChecked ? 8 : 16;
 
-//                char[][] prev = real_memory.clone();
+                if (isChecked)
+                    target = ALLOWED_BYTE;
+                else
+                    target = HIGH_BYTE;
+
+                updateAllowed();
+
                 boolean[][] prev_flags = real_memory_flags.clone();
 
                 real_memory = new char[height][width];
                 real_memory_flags = new boolean[height][width];
 
                 setBoolean(prev_flags);
-
-//                int n = min(width, prev[0].length);
-//                for (int i = 0; i < height * n; ++i) {
-//                    real_memory[i / width][i % width] = prev[i / prev[0].length][i % prev[0].length];
-//                    real_memory_flags[i / width][i % width] = prev_flags[i / prev[0].length][i % prev[0].length];
-//                }
-//                input_field.setInputType(getInputType());
-//                fullUpdate();
             }
         });
 
@@ -135,7 +139,7 @@ public class CharMapping extends DataTypeMapping{
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 class_just_init = false;
                 String str = input_field.getText().toString();
-                Log.d(MainActivity.TAG, str + " " + prev);
+                Log.d(MainActivity.TAG, "str change: " + str + " " + prev);
 
                 int delta = 1;
                 if (y + (x + s.length() + 1) / width < 10 && str.length() > prev.length() &&
@@ -296,40 +300,62 @@ public class CharMapping extends DataTypeMapping{
             if (width > old_memory[0].length) {
                 for (int sub_index = 0; sub_index < old_memory[0].length; ++sub_index) {
                     int delta = width / old_memory[0].length;
-                    for (int j = sub_index * delta; j < (sub_index + 1) * delta; ++j) {
+                    for (int j = 0; j < delta; ++j) {
+                        int sub_width = sub_index * delta;
+                        int real_j = j + sub_width;
+                        int idx = (MainActivity.big_endian_flag ? delta - 1 - j : j) + sub_width;
+
                         char ch = 0;
-                        for (int k = j * char_len; k < (j + 1) * char_len && old_memory[i][sub_index]; ++k) {
+                        for (int k = real_j * char_len; k < (real_j + 1) * char_len && old_memory[i][sub_index]; ++k) {
+                            ch <<= 8;
                             ch += memory_dump[i][k] + 128;
                         }
-                        real_memory_flags[i][j] = old_memory[i][sub_index];
-                        real_memory[i][j] = ch;
+
+                        real_memory_flags[i][idx] = old_memory[i][sub_index];
+                        real_memory[i][idx] = ch;
                     }
                 }
             }
             else {
+                int delta = old_memory[0].length / width;
                 for (int sub_index = 0; sub_index < width; ++sub_index) {
-                    int delta = old_memory[0].length / width;
                     char ch = 0;
+
                     for (int j = sub_index * delta; j < (sub_index + 1) * delta && old_memory[i][j]; ++j) {
+                        int idx = MainActivity.big_endian_flag ? j : 2 * sub_index * delta + 1 - j;
                         ch <<= 8;
-                        ch += memory_dump[i][j] + 128;
-                        real_memory_flags[i][sub_index] |= old_memory[i][j];
+                        ch += memory_dump[i][idx] + 128;
+                        real_memory_flags[i][sub_index] |= old_memory[i][idx];
                     }
                     real_memory[i][sub_index] = ch;
                 }
             }
         }
 
-        just_cleared = true;
-
         for (char[] line : real_memory)
             Log.d(MainActivity.TAG, Arrays.toString(line));
+
+        if (width < old_memory[0].length) {
+            int delta = old_memory[0].length / width;
+            x = x / delta + x % delta;
+        }
+        else if (old_memory[0].length == 8)
+            x *= 2;
+
+        // Защита от ввода чего-либо в самую последнюю ячейку
+        if (real_memory[height - 1][width - 1] != '\0') {
+            real_memory[height - 1][width - 1] = '\0';
+            if (real_memory[height - 1][width - 2] == '\0')
+                real_memory_flags[height - 1][width - 1] = false;
+        }
+
+        just_cleared = true;
 
         if (real_memory_flags[y][x])
             input_field.setText(fromArrayToString(y, x));
 
-//        fullUpdate();
-        memory_text.setText(getAsMemoryDump());
+        fullUpdate();
+        updateAddress();
     }
 
     @Override
@@ -340,5 +366,22 @@ public class CharMapping extends DataTypeMapping{
     @Override
     public AdapterView.OnItemSelectedListener getAddressYListener() {
         return listener_y;
+    }
+
+    private void updateAddress() {
+        String[] values = new String[16 / getWidth()];
+
+        for (int i = 0, value = 0; i < values.length; value += getWidth(), ++i)
+            values[i] = "*" + Integer.toHexString(value).toUpperCase();
+
+        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>
+                (MainActivity.getContext(), android.R.layout.simple_spinner_item,
+                        values);
+        spinnerArrayAdapter.setDropDownViewResource(android.R.layout
+                .simple_spinner_dropdown_item);
+        address_x.setAdapter(spinnerArrayAdapter);
+
+
+        address_x.setSelection(getX());
     }
 }

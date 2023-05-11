@@ -1,13 +1,11 @@
 package com.example.course_work.data_mapping;
 
-import android.annotation.SuppressLint;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.example.course_work.MainActivity;
@@ -27,15 +25,15 @@ public abstract class DataTypeMapping {
     Button big_endian;
     boolean[][] real_memory_flags;
 
-    public String allowed = "0123456789.-";
-    public StandardInputField mappingInputFilter = new StandardInputField(allowed);
+    public int target = 256;
+    public StandardInputField mappingInputFilter = new StandardInputField(target);
 
     public DataTypeMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
-                           Button big_endian, String allowed) {
+                           Button big_endian, int target) {
         this(memory_dump, memory_text, input_field, big_endian);
 
-        this.allowed = allowed;
-        mappingInputFilter = new StandardInputField(allowed);
+        this.target = target;
+        mappingInputFilter = new StandardInputField(target);
     }
 
     public DataTypeMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
@@ -99,7 +97,7 @@ public abstract class DataTypeMapping {
     }
 
     void updateAllowed() {
-        mappingInputFilter.allowed = allowed;
+        mappingInputFilter.target = target;
     }
 
     public int getInputType() {

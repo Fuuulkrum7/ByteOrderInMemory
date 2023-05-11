@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -139,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
             width = dataTypeMapping.getWidth();
             old_memory = dataTypeMapping.getRealMemory();
         }
+        cyrillic.setEnabled(false);
 
         switch (position) {
             case 1:
@@ -152,8 +154,9 @@ public class MainActivity extends AppCompatActivity {
                 );
                 break;
             case 3:
+                cyrillic.setEnabled(true);
                 dataTypeMapping = new CharMapping(
-                        memory, memory_dump, text_field, big_endian, cyrillic, x, y, width
+                        memory, memory_dump, text_field, big_endian, address_x, cyrillic, x, y, width
                 );
                 break;
             case 0:
