@@ -60,7 +60,8 @@ public abstract class DataTypeMapping {
         boolean bn = MainActivity.big_endian_flag;
 
         // Перебираем все строки в памяти
-        for (byte[] line: memory_dump) {
+        for (int k = 0; k < memory_dump.length; ++k) {
+            byte[] line = memory_dump[k];
             // перебираем каждую ячейку памяти
             for (int i = 0; i < width; ++i) {
                 // Теперь перебираем ячейку побайтово
@@ -75,7 +76,11 @@ public abstract class DataTypeMapping {
                     // Если один символ, до добавляем 0, чтобыв не сместилась строка
                     if (str.length() == 1)
                         str = '0' + str;
-                    dump.append(str);
+
+                    if (real_memory_flags[k][i])
+                        dump.append(str);
+                    else
+                        dump.append("XX");
 
                     // Если мы не в конце и не надо добавлять разделитель
                     if (j < (i + 1) * delta - 1)

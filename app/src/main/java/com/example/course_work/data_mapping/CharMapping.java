@@ -113,9 +113,9 @@ public class CharMapping extends DataTypeMapping{
                 width = isChecked ? 8 : 16;
 
                 if (isChecked)
-                    target = ALLOWED_BYTE;
-                else
                     target = HIGH_BYTE;
+                else
+                    target = ALLOWED_BYTE;
 
                 updateAllowed();
 
@@ -182,8 +182,6 @@ public class CharMapping extends DataTypeMapping{
             if (real_memory_flags[i + (j + k) / width][(j + k) % width])
                 str.append(real_memory[i + (j + k) / width][(j + k) % width]);
         }
-
-        Log.d(MainActivity.TAG, str.toString());
 
         return str.toString();
     }
@@ -255,13 +253,18 @@ public class CharMapping extends DataTypeMapping{
     public StringBuilder getAsMemoryDump() {
         StringBuilder dump = new StringBuilder();
         if (width == 16) {
-            for (byte[] line : memory_dump) {
+            for (int k = 0; k < memory_dump.length; ++k) {
+                byte[] line = memory_dump[k];
                 for (int i = 0; i < line.length; ++i) {
                     String str = Integer.toHexString(line[i] + 128).toUpperCase();
                     // Если один символ, до добавляем 0, чтобыв не сместилась строка
                     if (str.length() == 1)
                         str = '0' + str;
-                    dump.append(str);
+
+                    if (real_memory_flags[k][i])
+                        dump.append(str);
+                    else
+                        dump.append("XX");
 
                     // Если мы не в конце и не надо добавлять разделитель
                     if (i < line.length - 1)
@@ -307,8 +310,9 @@ public class CharMapping extends DataTypeMapping{
 
                         char ch = 0;
                         for (int k = real_j * char_len; k < (real_j + 1) * char_len && old_memory[i][sub_index]; ++k) {
+                            int t = MainActivity.big_endian_flag ? real_j * char_len * 2 - 1 + char_len - k : k;
                             ch <<= 8;
-                            ch += memory_dump[i][k] + 128;
+                            ch += memory_dump[i][t] + 128;
                         }
 
                         real_memory_flags[i][idx] = old_memory[i][sub_index];
@@ -322,7 +326,7 @@ public class CharMapping extends DataTypeMapping{
                     char ch = 0;
 
                     for (int j = sub_index * delta; j < (sub_index + 1) * delta && old_memory[i][j]; ++j) {
-                        int idx = MainActivity.big_endian_flag ? j : 2 * sub_index * delta + 1 - j;
+                        int idx = MainActivity.big_endian_flag ?  j : 2 * sub_index * delta - 1 - j + delta;
                         ch <<= 8;
                         ch += memory_dump[i][idx] + 128;
                         real_memory_flags[i][sub_index] |= old_memory[i][idx];

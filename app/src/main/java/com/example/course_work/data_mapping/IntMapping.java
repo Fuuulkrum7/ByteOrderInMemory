@@ -198,9 +198,7 @@ public class IntMapping extends DataTypeMapping{
                     int sub_len = old_memory[0].length / real_memory_flags[0].length;
 
                     // Перебираем все старые ячейки
-                    for (int bool_idx = i * sub_len; bool_idx < (i + 1) * sub_len &&
-                            old_memory[line][(i + 1) * sub_len - 1 - bool_idx % sub_len] ||
-                            old_memory[line][bool_idx]; ++bool_idx) {
+                    for (int bool_idx = i * sub_len; bool_idx < (i + 1) * sub_len; ++bool_idx) {
                         // перебираем их же, но уже побайтово
                         for (int sub_i = bool_idx * (full_len / sub_len); sub_i < (bool_idx + 1) * (full_len / sub_len); ++sub_i) {
                             // Считываем данные в число
