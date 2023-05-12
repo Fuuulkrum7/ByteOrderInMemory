@@ -209,7 +209,7 @@ public class LongMapping extends DataTypeMapping {
                     // И при этом данные в следующей ячейке памяти есть, то, чтобы их порядок соответствовал
                     // big-endian, меняем их в памяти местами.
                     if (MainActivity.big_endian_flag && bool_idx < (i + 1) * sub_len - 1 && old_memory[line][bool_idx + 1]) {
-                        data <<= 8L * old_memory[0].length;
+                        data <<= 8L;
                         coef = 1;
                     }
                 }

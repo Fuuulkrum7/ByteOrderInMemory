@@ -198,7 +198,9 @@ public class IntMapping extends DataTypeMapping{
                     int sub_len = old_memory[0].length / real_memory_flags[0].length;
 
                     // Перебираем все старые ячейки
-                    for (int bool_idx = i * sub_len; bool_idx < (i + 1) * sub_len && old_memory[line][bool_idx]; ++bool_idx) {
+                    for (int bool_idx = i * sub_len; bool_idx < (i + 1) * sub_len &&
+                            old_memory[line][(i + 1) * sub_len - 1 - bool_idx % sub_len] ||
+                            old_memory[line][bool_idx]; ++bool_idx) {
                         // перебираем их же, но уже побайтово
                         for (int sub_i = bool_idx * (full_len / sub_len); sub_i < (bool_idx + 1) * (full_len / sub_len); ++sub_i) {
                             // Считываем данные в число
@@ -214,7 +216,7 @@ public class IntMapping extends DataTypeMapping{
                         // И при этом данные в следующей ячейке памяти есть, то, чтобы их порядок соответствовал
                         // big-endian, меняем их в памяти местами.
                         if (MainActivity.big_endian_flag && bool_idx < (i + 1) * sub_len - 1 && old_memory[line][bool_idx + 1]) {
-                            data <<= 8L * old_memory[0].length;
+                            data <<= 8;
                             coef = 1;
                         }
                     }
