@@ -31,21 +31,7 @@ public class FloatMapping extends DataTypeMapping {
             char val = parent.getItemAtPosition(position).toString().charAt(1);
             x = Integer.parseInt(String.valueOf(val), 16) / (16 / width);
 
-            if (real_memory_flags[y][x]) {
-                if (Float.isInfinite(real_memory[y][x]) || Float.isNaN(real_memory[y][x])) {
-                    Toast.makeText(MainActivity.getContext(), "Oh, you've got NaN or infinity!",
-                            Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    String res = new BigDecimal(real_memory[y][x]).toPlainString();
-                    int idx = res.indexOf('.');
-                    input_field.setText(res.substring(0, min(48 + idx, res.length())));
-                }
-            }
-            else {
-                just_cleared = true;
-                input_field.setText("");
-            }
+            updateTextField();
         }
 
         @Override
@@ -60,15 +46,7 @@ public class FloatMapping extends DataTypeMapping {
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             y = position;
 
-            if (real_memory_flags[y][x]) {
-                String res = new BigDecimal(real_memory[y][x]).toPlainString();
-                int idx = res.indexOf('.');
-                input_field.setText(res.substring(0, min(48 + idx, res.length())));
-            }
-            else {
-                just_cleared = true;
-                input_field.setText("");
-            }
+            updateTextField();
         }
 
         @Override
@@ -76,6 +54,29 @@ public class FloatMapping extends DataTypeMapping {
 
         }
     };
+
+    protected void updateTextField() {
+        if (real_memory_flags[y][x]) {
+            // Защита от "дурака", чтобы не получать NaN или бесконечность, их отобразить не выйдет
+            if (Float.isInfinite(real_memory[y][x]) || Float.isNaN(real_memory[y][x])) {
+                Toast.makeText(MainActivity.getContext(), "Oh, you've got NaN or infinity!",
+                        Toast.LENGTH_SHORT).show();
+                input_field.setText("0");
+            }
+            else {
+                // Отображаем нашу дробь. Все отображаем как положено, в виде десятичной дроби
+                // Чтобы она не сокращалась с использованием e, пришлось так сделать
+                String res = new BigDecimal(real_memory[y][x]).toPlainString();
+                int idx = res.indexOf('.');
+                input_field.setText(res.substring(0, min(48 + idx, res.length())));
+            }
+        }
+        else {
+            // Если в выбранном месте ничего нет в памяти, чистим поле ввода
+            just_cleared = true;
+            input_field.setText("");
+        }
+    }
 
     public FloatMapping(byte[][] memory_dump, TextView memory_text, EditText input_field,
                         Button big_endian,
@@ -111,13 +112,16 @@ public class FloatMapping extends DataTypeMapping {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String str = input_field.getText().toString();
+                // Если мы можем спарсить то, что введено
                 if (str.length() > 0 && (('0' <= str.charAt(0) && str.charAt(0) <= '9') || str.length() > 1)) {
                     real_memory_flags[y][x] = true;
 
                     try {
+                        // Пробуем это сделать
                         real_memory[y][x] = Float.parseFloat(str);
                     }
                     catch (NumberFormatException e) {
+                        // В случае ошибки возвращаемся к тому, что было введено ранее
                         real_memory[y][x] = Float.parseFloat(prev);
                         input_field.setText(prev);
                         Toast.makeText(MainActivity.getContext(), "Number is incorrect",
@@ -125,15 +129,13 @@ public class FloatMapping extends DataTypeMapping {
                     }
                     updateByteArray(y, x);
                 }
+                // Если ввод пустой и это не была очистка текстового поля
                 else if (s.length() == 0 && !just_cleared) {
+                    // Прекращаем отображать данные в ячейке
                     real_memory_flags[y][x] = false;
-                    int size = 16 / real_memory[0].length;
-
-                    for (int i = x * size; i < (x + 1) * size; ++i) {
-                        memory_dump[y][i] = 127;
-                    }
                 }
 
+                // В случае с очисткой меняем флаг обратно
                 if (just_cleared)
                     just_cleared = false;
             }
@@ -180,18 +182,23 @@ public class FloatMapping extends DataTypeMapping {
 
         int full_len = 16 / width;
 
+        // в зависимости от того, сколько байт требовалось раньше на ячейку и сейчас, делим одно на другое
+        // Главное не получить 0
         int coef = old_memory[0].length > real_memory_flags[0].length ?
                 old_memory[0].length / real_memory_flags[0].length : real_memory_flags[0].length / old_memory[0].length;
 
         for (int line = 0; line < real_memory.length; ++line) {
             for (int i = 0; i < full_len; ++i) {
+                // парсим память в требуемом порядке
                 int bits = 0;
                 for (int j = (i + 1) * full_len - 1; j >= i * full_len; --j) {
                     bits <<= 8;
                     bits += memory_dump[line][j] + 128;
                 }
+                // переводим биты в число
                 real_memory[line][i] = Float.intBitsToFloat(bits);
 
+                // И обновляем флаги
                 if (old_memory[0].length > real_memory_flags[0].length) {
                     for (int k = i * coef; k < (i + 1) * coef; ++k)
                         real_memory_flags[line][i] |= old_memory[line][k];
